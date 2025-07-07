@@ -99,6 +99,21 @@ if uploaded_file:
                 return output.getvalue()
 
             excel_data = to_excel()
+# Add this inside your `if uploaded_file:` block, after plotting and before st.download_button:
+
+        file_name_input = st.text_input("Enter Excel file name (without extension):", value="processed_data")
+
+# Validate filename (basic)
+        if file_name_input.strip() == "":
+            st.warning("Please enter a valid file name.")
+else:
+    excel_data = to_excel()
+    st.download_button(
+        label="Download Excel file",
+        data=excel_data,
+        file_name=f"{file_name_input.strip()}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
             st.download_button(
                 label="Download Excel file",
