@@ -27,12 +27,6 @@ def process_time(df_subset, ref_time):
         time_deltas.append(delta_hours)
     return time_deltas
 
-# ... (keep your previous code unchanged up to this point)
-
-import io
-
-# ... your existing code ...
-
 if uploaded_file:
     try:
         df = load_data(uploaded_file)
@@ -61,7 +55,7 @@ if uploaded_file:
             df3["Time (hours)"] = process_time(df3, ref_time)
             df4["Time (hours)"] = process_time(df4, ref_time)
 
-            # Plotting code stays the same
+            # Helper to create individual plotly charts
             def create_plot(df_sub, name, color):
                 mask = (df_sub["Time (hours)"] >= x_min) & (df_sub["Time (hours)"] <= x_max)
                 filtered = df_sub.loc[mask]
@@ -88,7 +82,7 @@ if uploaded_file:
             st.plotly_chart(create_plot(df3, "Capacitive", "#666666"), use_container_width=True)
             st.plotly_chart(create_plot(df4, "Pirani", "#999999"), use_container_width=True)
 
-            # --- HERE IS THE NEW EXPORT / DOWNLOAD BUTTON CODE ---
+            # --- Export to Excel and Download Button with Filename input ---
             def to_excel():
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -98,29 +92,18 @@ if uploaded_file:
                     df4.to_excel(writer, sheet_name='Pirani', index=False)
                 return output.getvalue()
 
-            excel_data = to_excel()
-# Add this inside your `if uploaded_file:` block, after plotting and before st.download_button:
+            file_name_input = st.text_input("Enter Excel file name (without extension):", value="processed_data")
 
-        file_name_input = st.text_input("Enter Excel file name (without extension):", value="processed_data")
-
-# Validate filename (basic)
-        if file_name_input.strip() == "":
-            st.warning("Please enter a valid file name.")
-else:
-    excel_data = to_excel()
-    st.download_button(
-        label="Download Excel file",
-        data=excel_data,
-        file_name=f"{file_name_input.strip()}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-            st.download_button(
-                label="Download Excel file",
-                data=excel_data,
-                file_name="processed_data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            if file_name_input.strip() == "":
+                st.warning("Please enter a valid file name.")
+            else:
+                excel_data = to_excel()
+                st.download_button(
+                    label="Download Excel file",
+                    data=excel_data,
+                    file_name=f"{file_name_input.strip()}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
     except Exception as e:
         st.error(f"Error processing file: {e}")
