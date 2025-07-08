@@ -6,7 +6,7 @@ import io
 import plotly.graph_objects as go
 
 from PIL import Image
-
+pip install --upgrade pip
 # Load and display the logo
 
 st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
