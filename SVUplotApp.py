@@ -8,10 +8,13 @@ import plotly.graph_objects as go
 from PIL import Image
 
 # Load and display the logo
-logo = Image.open("Rheavita_logo.png")
-st.image(logo, width=200)  # Adjust width as needed
-# App config
+
 st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
+
+# Display logo
+logo = Image.open("Rheavita_logo.png")  # 👈 Make sure the filename matches your image
+st.image(logo, width=200)  # 👈 Adjust size as needed
+# App config
 st.title("CSV File Viewer and Plotter")
 
 # Upload CSV file
