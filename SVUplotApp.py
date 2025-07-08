@@ -5,6 +5,11 @@ from datetime import datetime
 import io
 import plotly.graph_objects as go
 
+from PIL import Image
+
+# Load and display the logo
+logo = Image.open("Rheavita_logo.png")
+st.image(logo, width=200)  # Adjust width as needed
 # App config
 st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
 st.title("CSV File Viewer and Plotter")
