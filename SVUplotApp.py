@@ -8,25 +8,6 @@ import io
 # App configuration
 st.set_page_config(page_title="Rheavita Signal Viewer", layout="wide", initial_sidebar_state="expanded")
 
-# Custom CSS for black look (overrides Streamlit defaults)
-st.markdown("""
-    <style>
-        body, .stApp {
-            background-color: #111;
-            color: #fff;
-        }
-        .stTextInput, .stSelectbox, .stSlider, .stFileUploader {
-            background-color: #222;
-        }
-        .stButton button {
-            background-color: #444;
-            color: white;
-        }
-        .stExpanderHeader {
-            font-weight: bold;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 st.title("📈 Rheavita Signal Viewer")
 
@@ -103,10 +84,11 @@ if uploaded_file:
             export_btn = st.button(" Export selected signals to Excel")
             if export_btn:
                 output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+               with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for signal_name, df_signal in plots:
                         sheet = signal_name[:31]  # Excel sheet name limit
                         df_signal.to_excel(writer, sheet_name=sheet, index=False)
+
                     writer.save()
                 st.download_button(
                     label=" Download Excel file",
