@@ -89,7 +89,7 @@ if uploaded_file:
                         sheet = signal_name[:31]  # Excel sheet name limit
                         df_signal.to_excel(writer, sheet_name=sheet, index=False)
 
-                    writer.save()
+             
                 st.download_button(
                     label=" Download Excel file",
                     data=output.getvalue(),
