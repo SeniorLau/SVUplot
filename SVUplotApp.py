@@ -118,7 +118,8 @@ if uploaded_files:
                         if signal_df.empty:
                             signal_df = partial
                         else:
-                            signal_df = pd.concat([signal_df, partial], axis=1)
+                            signal_df = pd.concat([signal_df.reset_index(drop=True), partial.reset_index(drop=True)], axis=1)
+
 
                 sheet_name = signal[:31]
                 signal_df.to_excel(writer, sheet_name=sheet_name, index=False)
