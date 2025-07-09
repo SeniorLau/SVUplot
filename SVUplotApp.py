@@ -4,7 +4,11 @@ import numpy as np
 from datetime import datetime
 import plotly.graph_objects as go
 import io
+st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
 
+# Display logo
+logo = Image.open("Rheavita_logo.png")  # 👈 Make sure the filename matches your image
+st.image(logo, width=200)  # 👈 Adjust size as needed
 # App configuration
 st.set_page_config(page_title="Rheavita Signal Viewer", layout="wide", initial_sidebar_state="expanded")
 
