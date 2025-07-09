@@ -93,38 +93,38 @@ if uploaded_files:
  # Export button
 export_btn = st.button("📤 Export selected signals to Excel")
 
-    if export_btn:
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            for signal in selected_signals:
-                signal_frames = []
-                time_col = None
+if export_btn:
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        for signal in selected_signals:
+            signal_frames = []
+            time_col = None
 
-                for file_name, df, ref_time in all_data:
-                    offset = file_offsets[file_name]
-                    df_signal = df[df["Name"].str.contains(signal)].copy()
-                    df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
-                    df_signal = df_signal[
-                        (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
-                    ]
+            for file_name, df, ref_time in all_data:
+                offset = file_offsets[file_name]
+                df_signal = df[df["Name"].str.contains(signal)].copy()
+                df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
+                df_signal = df_signal[
+                (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
+                ]
 
-                    if not df_signal.empty:
-                        df_signal = df_signal[["Time (hours)", "Value"]].copy()
-                        df_signal.rename(columns={"Value": file_name}, inplace=True)
-                        if time_col is None:
-                            time_col = df_signal[["Time (hours)"]]
-                        signal_frames.append(df_signal[[file_name]])
+                if not df_signal.empty:
+                    df_signal = df_signal[["Time (hours)", "Value"]].copy()
+                    df_signal.rename(columns={"Value": file_name}, inplace=True)
+                    if time_col is None:
+                        time_col = df_signal[["Time (hours)"]]
+                    signal_frames.append(df_signal[[file_name]])
 
-                if signal_frames and time_col is not None:
-                    combined_df = pd.concat([time_col] + signal_frames, axis=1)
-                    sheet_name = signal[:31]
-                    combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
+            if signal_frames and time_col is not None:
+                combined_df = pd.concat([time_col] + signal_frames, axis=1)
+                sheet_name = signal[:31]
+                combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        st.download_button(
-            label="📥 Download Excel file",
-            data=output.getvalue(),
-            file_name=f"{filename}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    st.download_button(
+        label="📥 Download Excel file",
+        data=output.getvalue(),
+        file_name=f"{filename}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
     
