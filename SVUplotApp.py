@@ -3,29 +3,33 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import io
+from PIL import Image
 import plotly.graph_objects as go
 
-from PIL import Image
+st.set_page_config(page_title="Rheavita CSV Plotter", layout="wide", initial_sidebar_state="expanded")
 
-# Load and display the logo
+# Load and display logo
+logo = Image.open("Rheavita_logo.png")
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <img src="Rheavita_logo.png" width="180">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
-
-# Display logo
-logo = Image.open("Rheavita_logo.png")  # 👈 Make sure the filename matches your image
-st.image(logo, width=200)  # 👈 Adjust size as needed
-# App config
-st.title("CSV File Viewer and Plotter")
+# Title
+st.markdown("<h1 style='text-align: center; color: white;'>CSV Signal Viewer & Exporter</h1>", unsafe_allow_html=True)
 
 # Upload CSV file
-uploaded_file = st.file_uploader("Upload CSV file (semicolon separated)", type=["csv"])
+uploaded_file = st.file_uploader("📂 Upload your CSV file (semicolon separated)", type=["csv"])
 
-# Load and cache CSV
 @st.cache_data
 def load_data(file):
-    return pd.read_csv(file, sep=';')
+    df = pd.read_csv(file, sep=';')
+    return df
 
-# Process time for plotting
 def process_time(df_subset, ref_time):
     time_deltas = []
     for ts in df_subset["Timestamp"]:
@@ -38,94 +42,78 @@ if uploaded_file:
     try:
         df = load_data(uploaded_file)
 
-        st.subheader("Data Preview")
+        st.subheader("🔎 Data Preview")
         st.dataframe(df.head(20), use_container_width=True)
 
-        # Sidebar: X-axis limits
-        st.sidebar.subheader("X-axis (Time in hours) Limits")
-        x_min = st.sidebar.slider("X Min", 0.0, 10.0, 0.0, 0.1)
-        x_max = st.sidebar.slider("X Max", 0.0, 10.0, 4.0, 0.1)
+        st.sidebar.header("🔧 Settings")
+        x_min = st.sidebar.slider("X Min (hours)", 0.0, 10.0, 0.0, 0.1)
+        x_max = st.sidebar.slider("X Max (hours)", 0.0, 10.0, 4.0, 0.1)
 
-        # Sidebar: Signal selection for export
-        st.sidebar.subheader("Select Signals to Export")
-        export_vial = st.sidebar.checkbox("Vial temperature", value=True)
-        export_heater = st.sidebar.checkbox("Heater power", value=True)
-        export_cap = st.sidebar.checkbox("Capacitive", value=True)
-        export_pirani = st.sidebar.checkbox("Pirani", value=True)
+        # Filter signals
+        signals = {
+            "Vial temperature": "#00FFFF",
+            "Heater power": "#FF9900",
+            "Capacitive": "#AAFF00",
+            "Pirani": "#FF00FF"
+        }
 
-        # Filter subsets
-        df1 = df[df["Name"].str.contains("Vial temperature")].copy()
-        df2 = df[df["Name"].str.contains("Heater power")].copy()
-        df3 = df[df["Name"].str.contains("Capacitive")].copy()
-        df4 = df[df["Name"].str.contains("Pirani")].copy()
+        selected_signals = st.sidebar.multiselect("📈 Select signals to plot/export:", list(signals.keys()), default=list(signals.keys()))
 
-        # Check and process
-        if df1.empty:
-            st.warning("No data found with 'Vial temperature' in Name column.")
-        else:
-            ref_time = datetime.strptime(df1["Timestamp"].iloc[0], "%Y-%m-%d %H:%M:%S.%f")
+        signal_dfs = {}
+        ref_time = None
 
-            df1["Time (hours)"] = process_time(df1, ref_time)
-            df2["Time (hours)"] = process_time(df2, ref_time)
-            df3["Time (hours)"] = process_time(df3, ref_time)
-            df4["Time (hours)"] = process_time(df4, ref_time)
+        for label in selected_signals:
+            signal_df = df[df["Name"].str.contains(label)].copy()
+            if not signal_df.empty:
+                if ref_time is None:
+                    ref_time = datetime.strptime(signal_df["Timestamp"].iloc[0], "%Y-%m-%d %H:%M:%S.%f")
+                signal_df["Time (hours)"] = process_time(signal_df, ref_time)
+                signal_dfs[label] = signal_df
 
-            # Plotting function
-            def create_plot(df_sub, name, color):
-                mask = (df_sub["Time (hours)"] >= x_min) & (df_sub["Time (hours)"] <= x_max)
-                filtered = df_sub.loc[mask]
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(
-                    x=filtered["Time (hours)"],
-                    y=filtered["Value"],
-                    mode='lines',
-                    line=dict(color=color),
-                    name=name
-                ))
-                fig.update_layout(
-                    title=name,
-                    xaxis_title="Time (hours)",
-                    yaxis_title="Value",
-                    template="plotly_white",
-                    height=300,
-                    margin=dict(l=40, r=40, t=40, b=40)
-                )
-                return fig
+        # Plot
+        st.subheader("📊 Signal Plots")
+        for label, data in signal_dfs.items():
+            mask = (data["Time (hours)"] >= x_min) & (data["Time (hours)"] <= x_max)
+            filtered = data.loc[mask]
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=filtered["Time (hours)"],
+                y=filtered["Value"],
+                mode='lines',
+                line=dict(color=signals[label], width=2),
+                name=label
+            ))
+            fig.update_layout(
+                title=label,
+                template="plotly_dark",
+                height=300,
+                margin=dict(l=30, r=30, t=40, b=30),
+                xaxis_title="Time (hours)",
+                yaxis_title="Value",
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-            # Display plots
-            st.plotly_chart(create_plot(df1, "Vial temperature", "#000000"), use_container_width=True)
-            st.plotly_chart(create_plot(df2, "Heater power", "#333333"), use_container_width=True)
-            st.plotly_chart(create_plot(df3, "Capacitive", "#666666"), use_container_width=True)
-            st.plotly_chart(create_plot(df4, "Pirani", "#999999"), use_container_width=True)
+        # Export to Excel
+        st.subheader("💾 Export Data to Excel")
+        export_filename = st.text_input("Enter filename (no extension):", value="exported_signals")
 
-            # File export section
-            st.subheader("Export to Excel")
-            file_name = st.text_input("Enter file name (without extension)", "exported_data")
-
-            if st.button("Export Selected Signals"):
+        if st.button("Export Selected Signals"):
+            if signal_dfs:
                 output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    if export_vial:
-                        df1.to_excel(writer, sheet_name='Vial_temperature', index=False)
-                    if export_heater:
-                        df2.to_excel(writer, sheet_name='Heater_power', index=False)
-                    if export_cap:
-                        df3.to_excel(writer, sheet_name='Capacitive', index=False)
-                    if export_pirani:
-                        df4.to_excel(writer, sheet_name='Pirani', index=False)
-                    writer.close()
-                    processed_data = output.getvalue()
-
-                st.success("File ready for download!")
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    for label, data in signal_dfs.items():
+                        data.to_excel(writer, sheet_name=label.replace(" ", "_"), index=False)
                 st.download_button(
-                    label="Download Excel File",
-                    data=processed_data,
-                    file_name=f"{file_name}.xlsx",
+                    label="📥 Download Excel File",
+                    data=output.getvalue(),
+                    file_name=f"{export_filename}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+            else:
+                st.warning("No signals selected or available to export.")
 
     except Exception as e:
-        st.error(f"Error processing file: {e}")
+        st.error(f"❌ Error processing file: {e}")
 
 else:
-    st.info("Please upload a CSV file to get started.")
+    st.info("👈 Upload a CSV file to begin.")
