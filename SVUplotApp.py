@@ -34,7 +34,7 @@ if uploaded_files:
 
     all_data = []
     ref_times = []
-    
+
     # Display signal options from first file
     first_df = load_data(uploaded_files[0])
     available_signals = first_df["Name"].unique().tolist()
@@ -61,6 +61,7 @@ if uploaded_files:
         ref_times.append(ref_time)
         all_data.append((file.name, df, ref_time))
 
+    # Prepare plots per signal
     plots = {signal: go.Figure() for signal in selected_signals}
 
     for file_name, df, ref_time in all_data:
@@ -71,7 +72,6 @@ if uploaded_files:
             df_signal = df_signal[
                 (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
             ]
-
             if not df_signal.empty:
                 plots[signal].add_trace(go.Scatter(
                     x=df_signal["Time (hours)"],
@@ -80,6 +80,7 @@ if uploaded_files:
                     name=f"{signal} ({file_name})"
                 ))
 
+    # Display plots
     for signal, fig in plots.items():
         fig.update_layout(
             title=signal,
@@ -90,41 +91,51 @@ if uploaded_files:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig, use_container_width=True)
- # Export button
-export_btn = st.button("📤 Export selected signals to Excel")
 
-if export_btn:
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        for signal in selected_signals:
-            signal_frames = []
-            time_col = None
+    # Export button
+    export_btn = st.button("📤 Export selected signals to Excel")
 
-            for file_name, df, ref_time in all_data:
-                offset = file_offsets[file_name]
-                df_signal = df[df["Name"].str.contains(signal)].copy()
-                df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
-                df_signal = df_signal[
-                (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
-                ]
+    if export_btn:
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            for signal in selected_signals:
+                time_union = set()
+                value_dfs = {}
 
-                if not df_signal.empty:
-                    df_signal = df_signal[["Time (hours)", "Value"]].copy()
-                    df_signal.rename(columns={"Value": file_name}, inplace=True)
-                    if time_col is None:
-                        time_col = df_signal[["Time (hours)"]]
-                    signal_frames.append(df_signal[[file_name]])
+                # Step 1: Gather values for each file
+                for file_name, df, ref_time in all_data:
+                    offset = file_offsets[file_name]
+                    df_signal = df[df["Name"].str.contains(signal)].copy()
+                    df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
+                    df_signal = df_signal[
+                        (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
+                    ]
+                    if not df_signal.empty:
+                        df_reduced = df_signal[["Time (hours)", "Value"]].copy()
+                        df_reduced.rename(columns={"Value": file_name}, inplace=True)
+                        value_dfs[file_name] = df_reduced
+                        time_union.update(df_reduced["Time (hours)"].tolist())
 
-            if signal_frames and time_col is not None:
-                combined_df = pd.concat([time_col] + signal_frames, axis=1)
-                sheet_name = signal[:31]
-                combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
+                # Step 2: Combine into one DataFrame
+                if value_dfs:
+                    sorted_time = sorted(time_union)
+                    final_df = pd.DataFrame({"Time (hours)": sorted_time})
 
-    st.download_button(
-        label="📥 Download Excel file",
-        data=output.getvalue(),
-        file_name=f"{filename}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+                    for file_name, df_signal in value_dfs.items():
+                        final_df = pd.merge(
+                            final_df, df_signal, on="Time (hours)", how="left"
+                        )
 
-    
+                    sheet_name = signal[:31]
+                    final_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Step 3: Show download button
+        st.download_button(
+            label="📥 Download Excel file",
+            data=output.getvalue(),
+            file_name=f"{filename}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+else:
+    st.info("Upload one or more CSV files to get started.")
