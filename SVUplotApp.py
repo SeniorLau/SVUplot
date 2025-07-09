@@ -90,9 +90,8 @@ if uploaded_files:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig, use_container_width=True)
-
-        # Export button
-        export_btn = st.button("📤 Export selected signals to Excel")
+ # Export button
+export_btn = st.button("📤 Export selected signals to Excel")
 
 if export_btn:
     output = io.BytesIO()
