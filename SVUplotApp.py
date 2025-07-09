@@ -6,10 +6,14 @@ import io
 from PIL import Image
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Rheavita CSV Plotter", layout="wide", initial_sidebar_state="expanded")
 
-# Load and display logo
-logo = Image.open("Rheavita_logo.png")
+st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
+
+# Display logo
+logo = Image.open("Rheavita_logo.png")  # 👈 Make sure the filename matches your image
+st.image(logo, width=200)  # 👈 Adjust size as needed
+
+st.title("CSV File Viewer and Plotter")
 st.markdown(
     """
     <div style="text-align: center;">
