@@ -41,8 +41,8 @@ if uploaded_files:
 
     with st.sidebar:
         st.markdown("### 🔧 Global Plot Settings")
-        x_min = st.slider("X Min (hours)", 0.0, 20.0, 0.0, 0.1)
-        x_max = st.slider("X Max (hours)", 0.0, 20.0, 5.0, 0.1)
+        x_min = st.slider("X Min (hours)", 0.0, 4, 0.0, 0.05)
+        x_max = st.slider("X Max (hours)", 0.0, 4, 4.0, 0.05)
         selected_signals = st.multiselect(
             "Select signals to plot",
             options=available_signals,
@@ -53,7 +53,7 @@ if uploaded_files:
     file_offsets = {}
     for i, file in enumerate(uploaded_files):
         with st.sidebar:
-            offset = st.slider(f"⏱ Offset for File {i+1} ({file.name})", -10.0, 10.0, 0.0, 0.1)
+            offset = st.slider(f"⏱ Offset for File {i+1} ({file.name})", -2, 2, 0.0, 0.05)
             file_offsets[file.name] = offset
 
         df = load_data(file)
