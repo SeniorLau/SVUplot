@@ -7,7 +7,7 @@ from PIL import Image
 import plotly.graph_objects as go
 
 
-st.set_page_config(layout="wide", page_title="CSV Viewer & Plotter")
+st.set_page_config(layout="wide", page_title="Lyo Mono DATA export")
 
 # Display logo
 logo = Image.open("Rheavita_logo.png")  # 👈 Make sure the filename matches your image
@@ -27,7 +27,7 @@ st.markdown(
 st.markdown("<h1 style='text-align: center; color: white;'>CSV Signal Viewer & Exporter</h1>", unsafe_allow_html=True)
 
 # Upload CSV file
-uploaded_file = st.file_uploader("📂 Upload your CSV file (semicolon separated)", type=["csv"])
+uploaded_file = st.file_uploader(" Upload your CSV file (semicolon separated)", type=["csv"])
 
 @st.cache_data
 def load_data(file):
@@ -46,7 +46,7 @@ if uploaded_file:
     try:
         df = load_data(uploaded_file)
 
-        st.subheader("🔎 Data Preview")
+        st.subheader(" Data Preview")
         st.dataframe(df.head(20), use_container_width=True)
 
         st.sidebar.header("🔧 Settings")
@@ -55,10 +55,10 @@ if uploaded_file:
 
         # Filter signals
         signals = {
-            "Vial temperature": "#00FFFF",
-            "Heater power": "#FF9900",
-            "Capacitive": "#AAFF00",
-            "Pirani": "#FF00FF"
+            "Vial temperature": "Black",
+            "Heater power": "Black",
+            "Capacitive": "#Black",
+            "Pirani": "Black"
         }
 
         selected_signals = st.sidebar.multiselect("📈 Select signals to plot/export:", list(signals.keys()), default=list(signals.keys()))
@@ -75,7 +75,7 @@ if uploaded_file:
                 signal_dfs[label] = signal_df
 
         # Plot
-        st.subheader("📊 Signal Plots")
+        st.subheader(" Signal Plots")
         for label, data in signal_dfs.items():
             mask = (data["Time (hours)"] >= x_min) & (data["Time (hours)"] <= x_max)
             filtered = data.loc[mask]
@@ -98,7 +98,7 @@ if uploaded_file:
             st.plotly_chart(fig, use_container_width=True)
 
         # Export to Excel
-        st.subheader("💾 Export Data to Excel")
+        st.subheader(" Export Data to Excel")
         export_filename = st.text_input("Enter filename (no extension):", value="exported_signals")
 
         if st.button("Export Selected Signals"):
@@ -108,7 +108,7 @@ if uploaded_file:
                     for label, data in signal_dfs.items():
                         data.to_excel(writer, sheet_name=label.replace(" ", "_"), index=False)
                 st.download_button(
-                    label="📥 Download Excel File",
+                    label=" Download Excel File",
                     data=output.getvalue(),
                     file_name=f"{export_filename}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -120,4 +120,4 @@ if uploaded_file:
         st.error(f"❌ Error processing file: {e}")
 
 else:
-    st.info("👈 Upload a CSV file to begin.")
+    st.info(" Upload a CSV file to begin.")
