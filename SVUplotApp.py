@@ -94,33 +94,33 @@ if uploaded_files:
     # Export button
     export_btn = st.button("📤 Export selected signals to Excel")
 
-   if export_btn:
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            combined_data = []
+if export_btn:
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        combined_data = []
 
-            for file_name, df, ref_time in all_data:
-                offset = file_offsets[file_name]
-                for signal in selected_signals:
-                    df_signal = df[df["Name"].str.contains(signal)].copy()
-                    df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
-                    df_signal = df_signal[
-                        (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
-                    ]
-                    if not df_signal.empty:
-                        df_signal["Source file"] = file_name  # Optional: for traceability
-                        sheet_name = f"{signal[:20]}_{file_name[:10]}"[:31]
-                        df_signal.to_excel(writer, sheet_name=sheet_name, index=False)
-                        combined_data.append(df_signal)
+        for file_name, df, ref_time in all_data:
+            offset = file_offsets[file_name]
+            for signal in selected_signals:
+                df_signal = df[df["Name"].str.contains(signal)].copy()
+                df_signal["Time (hours)"] = process_time(df_signal, ref_time, offset)
+                df_signal = df_signal[
+                    (df_signal["Time (hours)"] >= x_min) & (df_signal["Time (hours)"] <= x_max)
+                ]
+                if not df_signal.empty:
+                    df_signal["Source file"] = file_name  # Optional: for traceability
+                    sheet_name = f"{signal[:20]}_{file_name[:10]}"[:31]
+                    df_signal.to_excel(writer, sheet_name=sheet_name, index=False)
+                    combined_data.append(df_signal)
 
-            # Write combined sheet
-            if combined_data:
-                combined_df = pd.concat(combined_data, ignore_index=True)
-                combined_df.to_excel(writer, sheet_name="All_Selected_Data", index=False)
+        # Write combined sheet
+        if combined_data:
+            combined_df = pd.concat(combined_data, ignore_index=True)
+            combined_df.to_excel(writer, sheet_name="All_Selected_Data", index=False)
 
-        st.download_button(
-            label="📥 Download Excel file",
-            data=output.getvalue(),
-            file_name=f"{filename}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    st.download_button(
+        label="📥 Download Excel file",
+        data=output.getvalue(),
+        file_name=f"{filename}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
