@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 import plotly.graph_objects as go
 import io
+from PIL import Image  # 👈 Add this
 st.set_page_config(layout="wide", page_title="Rheavita Signal Viewer")
 
 # Display logo
