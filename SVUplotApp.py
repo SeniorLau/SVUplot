@@ -84,7 +84,7 @@ if uploaded_file:
             export_btn = st.button(" Export selected signals to Excel")
             if export_btn:
                 output = io.BytesIO()
-               with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     for signal_name, df_signal in plots:
                         sheet = signal_name[:31]  # Excel sheet name limit
                         df_signal.to_excel(writer, sheet_name=sheet, index=False)
