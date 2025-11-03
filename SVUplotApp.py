@@ -46,14 +46,14 @@ if uploaded_files:
         selected_signals = st.multiselect(
             "Select signals to plot",
             options=available_signals,
-            default=["Vial temperature", "Heater power", "Capacitive", "Pirani"]
+            default=["Vial temperature"]
         )
         filename = st.text_input("Export filename (no extension)", value="rheavita_signals")
 
     file_offsets = {}
     for i, file in enumerate(uploaded_files):
         with st.sidebar:
-            offset = st.slider(f"⏱ Offset for File {i+1} ({file.name})", -2.0, 2.0, 0.0, 0.05)
+            offset = st.slider(f"⏱ Offset for File {i+1} ({file.name})", -2.0, 2.0, 0.0, 0.01)
             file_offsets[file.name] = offset
 
         df = load_data(file)
