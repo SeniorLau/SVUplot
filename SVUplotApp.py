@@ -85,7 +85,7 @@ if uploaded_files:
         fig.update_layout(
             title=signal,
             xaxis_title="Time (hours)",
-            yaxis_title="Value",
+            yaxis_title="Vial Temperature (K)",
             template="plotly_dark",
             height=300,
             margin=dict(l=20, r=20, t=40, b=20),
